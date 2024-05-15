@@ -1,0 +1,8 @@
+numpy
+pandas
+matplotlib
+pyserial
+opencv-python
+opencv-python-headless
+fastapi
+pyyaml
