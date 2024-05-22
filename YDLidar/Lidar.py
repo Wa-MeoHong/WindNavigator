@@ -7,19 +7,21 @@
     ========================================================================
         1   |   05/15   |   First Write
         2   |   05/16   |   Write Class, test code
-        3   |   ...     |   ...
+        3   |   05/16   |   
+        4   |   ...     |   ...
     ========================================================================
     
 """
 
 import ydlidar
+import numpy as np
 
 class ParameterFalseException(Exception):
     pass
 
 """ YDLidar SDK를 이용한 클래스를 새로 작성 """
 class YDLidarX3Pro:
-    def __init__(self, port, baudrate=115200, ScanFreq=10.0, SampleRate=4, singlechannel=True) -> None:
+    def __init__(self, port, baudrate=115200, ScanFreq=8.0, SampleRate=4, singlechannel=True) -> None:
         # 포트, Baudrate, 샘플링 주파수 (1000단위), 스캔 주파수(1000단위, Hz)를 설정
         self._port = port
         self._baudrate = baudrate
@@ -37,6 +39,9 @@ class YDLidarX3Pro:
         self.lidar.setlidaropt(ydlidar.LidarPropScanFrequency, self._scanfreq)
         self.lidar.setlidaropt(ydlidar.LidarPropSampleRate, self._samplerate)
         self.lidar.setlidaropt(ydlidar.LidarPropSingleChannel, self._singlechannel)
+        #self.lidar.setlidaropt(ydlidar.LidarPropMinAngle, -45.0)
+        #self.lidar.setlidaropt(ydlidar.LidarPropMaxAngle, 45.0)
+        
         scan = ydlidar.LaserScan()
         return scan
         
@@ -59,17 +64,19 @@ class YDLidarX3Pro:
     def Disconnect(self):
         self.lidar.disconnecting()
         
-    def Scan_point(self, scan):
+    def Scan_point(self, scan, min_dist=0.3, max_dist=12.0):
         r = self.lidar.doProcessSimple(scan)
         if r:
             angles = []
             distances = []
             intensity = []
             for point in scan.points:
-                angles.append(point.angle)
-                distances.append(point.range)
-                intensity.append(point.intensity)
-            
+                # 거리 필터링. 30cm ~ 12m  내외 필터링함.
+                if min_dist <= point.range <= max_dist:
+                    angles.append(point.angle)
+                    distances.append(point.range)
+                    intensity.append(point.intensity)
+                
             dict_scan = {
                 'angle' : angles,
                 'dist' : distances,
